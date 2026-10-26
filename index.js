@@ -1,58 +1,59 @@
-// index.js
-const weatherApi = "https://api.weather.gov/alerts/active?area="
 
-// Your code here!
+const stateInput = document.getElementById('state-input');
+const fetchButton = document.getElementById('fetch-alerts');
+const alertsDisplay = document.getElementById('alerts-display');
+const errorMessage = document.getElementById('error-message');
 
-const stateInput = document.querySelector('#state-input');
-const fetchButton = document.querySelector('#fetch-alerts');
-const alertsDisplay = document.querySelector('#alerts-display');
-const errorMessage = document.querySelector('#error-message');
+function displayAlerts(data) {
+  alertsDisplay.innerHTML = '';
 
-async function fetchAlerts(stateAbbr) {
+  const summary = document.createElement('h2');
+  summary.textContent = `${data.title}: ${data.features.length}`;
+  alertsDisplay.appendChild(summary);
+
+  data.features.forEach(alert => {
+    const headline = document.createElement('p');
+    headline.textContent = alert.properties.headline;
+    alertsDisplay.appendChild(headline);
+  });
+}
+
+function fetchWeatherAlerts(state) {
   alertsDisplay.innerHTML = '';
   errorMessage.textContent = '';
   errorMessage.classList.add('hidden');
-  const data = await response.json();
-console.log(data);
 
-  try {
-    const response = await fetch(
-      `https://api.weather.gov/alerts/active?area=${stateAbbr}`
-    );
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch weather alerts');
-    }
-
-    const data = await response.json();
-
-    alertsDisplay.innerHTML = `<h2>${data.title}: ${data.features.length}</h2>`;
-
-    data.features.forEach(alert => {
-      const headline = document.createElement('p');
-      headline.textContent = alert.properties.headline;
-      alertsDisplay.appendChild(headline);
+  fetch(`https://api.weather.gov/alerts/active?area=${state}`)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Failed to fetch weather alerts');
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log(data);
+      displayAlerts(data);
+      errorMessage.textContent = '';
+      errorMessage.classList.add('hidden');
+    })
+    .catch(errorObject => {
+      console.log(errorObject.message);
+      errorMessage.textContent = errorObject.message;
+      errorMessage.classList.remove('hidden');
     });
-  } catch (error) {
-    errorMessage.textContent = error.message;
-    errorMessage.classList.remove('hidden');
-  }
 }
 
-fetchButton.addEventListener('click', async () => {
-  const stateAbbr = stateInput.value.trim().toUpperCase();
+fetchButton.addEventListener('click', () => {
+  const state = stateInput.value.trim().toUpperCase();
 
-  // Clear the input after clicking.
   stateInput.value = '';
+  alertsDisplay.innerHTML = '';
 
-  // Validate the state abbreviation.
-  if (!/^[A-Z]{2}$/.test(stateAbbr)) {
-    alertsDisplay.innerHTML = '';
-    errorMessage.textContent =
-      'Please enter a valid two-letter state abbreviation.';
+  if (!/^[A-Z]{2}$/.test(state)) {
+    errorMessage.textContent = 'Please enter a valid two-letter state abbreviation.';
     errorMessage.classList.remove('hidden');
     return;
   }
 
-  await fetchAlerts(stateAbbr);
+  fetchWeatherAlerts(state);
 });
