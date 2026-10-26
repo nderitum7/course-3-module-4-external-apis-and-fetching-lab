@@ -12,6 +12,8 @@ async function fetchAlerts(stateAbbr) {
   alertsDisplay.innerHTML = '';
   errorMessage.textContent = '';
   errorMessage.classList.add('hidden');
+  const data = await response.json();
+console.log(data);
 
   try {
     const response = await fetch(
